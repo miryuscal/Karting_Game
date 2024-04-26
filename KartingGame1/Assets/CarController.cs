@@ -8,9 +8,10 @@ public class CarController : MonoBehaviour
     private float horizontalInput, verticalInput;
     private float currentSteerAngle, currentbreakForce;
     private bool isBreaking;
+    [SerializeField] private GameObject SteeringWheel;
 
     // Settings
-    [SerializeField] private float motorForce, breakForce, maxSteerAngle;
+    [SerializeField] private float motorForce, breakForce, maxSteerAngle, divider, steeringWheelMultiplier;
 
     // Wheel Colliders
     [SerializeField] private WheelCollider frontLeftWheelCollider, frontRightWheelCollider;
@@ -21,6 +22,7 @@ public class CarController : MonoBehaviour
     [SerializeField] private Transform rearLeftWheelTransform, rearRightWheelTransform;
 
     private void FixedUpdate() {
+        UpdateSteeringWheel();
         GetInput();
         HandleMotor();
         HandleSteering();
@@ -39,15 +41,15 @@ public class CarController : MonoBehaviour
     }
 
     private void HandleMotor() {
-        frontLeftWheelCollider.motorTorque = verticalInput * motorForce;
-        frontRightWheelCollider.motorTorque = verticalInput * motorForce;
+        frontLeftWheelCollider.motorTorque = verticalInput * motorForce * Time.deltaTime;
+        frontRightWheelCollider.motorTorque = verticalInput * motorForce * Time.deltaTime;
         currentbreakForce = isBreaking ? breakForce : 0f;
         ApplyBreaking();
     }
 
     private void ApplyBreaking() {
-        frontRightWheelCollider.brakeTorque = currentbreakForce;
-        frontLeftWheelCollider.brakeTorque = currentbreakForce;
+        frontRightWheelCollider.brakeTorque = currentbreakForce / divider;
+        frontLeftWheelCollider.brakeTorque = currentbreakForce / divider;
         rearLeftWheelCollider.brakeTorque = currentbreakForce;
         rearRightWheelCollider.brakeTorque = currentbreakForce;
     }
@@ -79,5 +81,10 @@ public class CarController : MonoBehaviour
         wheelTransform.position = pos;
     }
 
+    private void UpdateSteeringWheel()
+    {
+        // Smoothly rotate the steering wheel based on target steer angle
+        SteeringWheel.transform.localRotation = Quaternion.Lerp(SteeringWheel.transform.localRotation, Quaternion.Euler(0, 0, horizontalInput * steeringWheelMultiplier), 2);
+    }
 
 }
